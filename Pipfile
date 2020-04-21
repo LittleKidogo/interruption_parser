@@ -10,6 +10,7 @@ flask = "*"
 flask-script = "*"
 pdfminer-six = "*"
 requests = "*"
+validators = "*"
 
 [requires]
 python_version = "3.7"

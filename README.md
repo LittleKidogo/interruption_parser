@@ -9,7 +9,7 @@ The project uses `pdfminer.six` to get the text in a pdf document. The text is t
 ## Prerequisites
 
 Before you begin, ensure you have met the following requirements:
-* You have installed `Python3` and `Pipenv`.
+* You have installed `python3` and `pipenv`.
 * You have a `Unix` or `Windows` machine.
 
 ## Installing interruption_parser
@@ -35,16 +35,19 @@ To try it:
 
 ### Using curl
 
-```curl --header "Content-Type: application/json" \
-  --request POST \
+```
+curl --header "Content-Type: application/json" \
+    --request POST \
     --data '{"document_link":"xyz","callback_url":"http://localhost:2300"}' \
-      http://localhost:5000/
+        http://localhost:5000/
 ```
 You should get the response
-```{
-    "error": null,
+```
+{
+  "error": null,
   "status": "Ok"
-  }
+
+}
 ```
 
 After a while you should get a request on the supplied callback url of the parsed data.

@@ -13,9 +13,6 @@ COPY . .
 # Install deps
 RUN pip3 install -r requirements.txt
 
-#Install pipenv
-RUN pip install pipenv
-
 CMD ["python3", "manage.py", "run" ]
 
 

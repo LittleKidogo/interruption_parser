@@ -19,5 +19,12 @@ jobs:
        pip install -r requirements.txt
 
 
-     # compile the code into an executable
-
+#compiling the code into an executable
+   compile:
+    runs-on: windows-latest
+    steps:
+    - name: Compile code
+      run: |
+       pip install PyInstaller
+       pyinstaller --onefile manage.py
+      

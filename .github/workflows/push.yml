@@ -17,12 +17,20 @@ jobs:
       run : |
        python -m pip install --upgrade pip
        pip install -r requirements.txt
-
-   compile:
+jobs:
+  compile:
     runs-on: windows-latest
     steps:
-    - name: Compile code
-      run: |
-       pip install PyInstaller
-       pyinstaller --onefile manage.py
+    - uses: actions/checkout@v2
+    - name: Set Up Python ${{matrix.python-version}}
+    - uses: actions/setup-python@v2
+      with: 
+        python-version: ${{ matrix.python-version }}
+    - name: Install Dependencies    
+        run: |
+         python -m pip install --upgrade pip
+         pip install PyInstaller
+    - name: build with PyInstaller
+        run: |
+         pyinstaller --onefile manage.py
       

@@ -3,7 +3,7 @@ from re import sub
 
 # strip leading and trailing dots
 def rlstrip_dot(string):
-    return sub(r"^[\.]|\.\s+$", "", string)
+    return sub(r"^[\.]+|[\.\s]+$", "", string)
 
 
 # helper function

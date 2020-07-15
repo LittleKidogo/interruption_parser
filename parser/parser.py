@@ -27,6 +27,9 @@ from .util import rlstrip_dot, composite_function
 # }
 
 def get_text(url):
+    """
+    Downloads a pdf converts it to text and returns the text with all '\n' replaced with '.'
+    """
     r = requests.get(url, stream=True)
     temFile = tempfile.TemporaryFile()
     copyfileobj(r.raw, temFile)
@@ -37,11 +40,15 @@ def get_text(url):
 
 
 def get_regions(text):
+    """ Consumes text
+    Takes a chunk of text marked with REGION at the beginning and REGION at the end
+    From the chunk of text, counties, areas and area details are mined
+    """
     regions = dict()
     regex = r"[.]([a-zA-Z\s]+?REGION)(.+?)[.](?:[a-zA-Z\s]+?REGION)"
     region_search = search(regex, text, IGNORECASE)
     while region_search:
-        # Get the top regio
+        # Get the top region
         region = dict()
         region["name"] = region_search.group(1).strip()
         region_key = '_'.join(region["name"].lower().split(' '))
@@ -65,6 +72,11 @@ def get_regions(text):
     return regions
 
 def get_counties(text, regions, region_key):
+    """Consumes text, a dictionary of regions and current region key
+    The text is chunked using county boundaries.
+    The parsed county and its details will be stored in the
+    dictionary value of the current region key.
+    """
     counties = list()
     regex = r"[.]([a-zA-Z\s]+?COUNTY)(.+?)[.]([a-zA-Z\s]*?COUNTY)"
     county_search = search(regex, text, IGNORECASE)
@@ -103,54 +115,63 @@ def get_counties(text, regions, region_key):
     return counties
 
 def get_areas(text):
-	areas = list()
-	regex = r"(AREA:[a-zA-Z\s,]+[.])(DATE.+?)AREA"
+    """consume text
+    chunks text using AREA boundaries and capturing date
+    The area details (time and date) are mined from the date capture group
+    """
+    areas = list()
+    regex = r"(AREA:[a-zA-Z\s,]+[.])(DATE.+?)AREA"
+    area_search = search(regex, text, IGNORECASE)
+    while area_search:
+	# Get the top area
+	area = dict()
+	area["name"] = area_search.group(1)
+	area["details"] = get_details(area_search.group(2))
+	areas.append(area)
+
+	# Remove the area
+	text = text.replace(area_search.group(1), '')
+	text = text.replace(area_search.group(2), '')
+
+	# Do the county search again
 	area_search = search(regex, text, IGNORECASE)
-	while area_search:
-		# Get the top area
-		area = dict()
-		area["name"] = area_search.group(1)
-		area["details"] = get_details(area_search.group(2))
-		areas.append(area)
-
-		# Remove the area
-		text = text.replace(area_search.group(1), '')
-		text = text.replace(area_search.group(2), '')
-
-		# Do the county search again
-		area_search = search(regex, text, IGNORECASE)
 
 	last_area_check = search(r"(AREA:[a-zA-Z\s,]+[.])(DATE.+?)$", text, IGNORECASE)
 	if last_area_check:
-		# Get the last area
-		area = dict()
-		area["name"] = last_area_check.group(1)
-		area["details"] = get_details(last_area_check.group(2))
-		areas.append(area)
+	    # Get the last area
+	    area = dict()
+	    area["name"] = last_area_check.group(1)
+	    area["details"] = get_details(last_area_check.group(2))
+	    areas.append(area)
 
-	return areas
+    return areas
 
 def get_details(text):
-	details = dict()
-	date_search = search(r"(DATE:)(.+?)TIME", text, IGNORECASE)
-	if date_search:
-		details["date"] = date_search.group(2).strip()
-		text = text.replace(date_search.group(1), '')
-		text = text.replace(date_search.group(2), '')
+    """The text consumed should be from a date capture group
+    The text is searched for time and date
+    """
+    details = dict()
+    date_search = search(r"(DATE:)(.+?)TIME", text, IGNORECASE)
+    if date_search:
+	details["date"] = date_search.group(2).strip()
+	text = text.replace(date_search.group(1), '')
+	text = text.replace(date_search.group(2), '')
 
 	time_search = search(r"(TIME:)(.+?P[.]M[.])", text, IGNORECASE)
 	if time_search:
-		details["time"] = time_search.group(2).strip()
-		text = text.replace(time_search.group(1), '')
-		text = text.replace(time_search.group(2), '')
+	    details["time"] = time_search.group(2).strip()
+	    text = text.replace(time_search.group(1), '')
+	    text = text.replace(time_search.group(2), '')
 
 	details["locations"] = get_locations(text)
 
-	return details
+    return details
 
 def get_locations(text):
-	stripSpaces = lambda location : location.strip()
-	return list(map(composite_function(stripSpaces, rlstrip_dot), text.split(',')))
+    """Mines comma separated locations at the end of a area section"""
+    stripSpaces = lambda location : location.strip()
+    return list(map(composite_function(stripSpaces, rlstrip_dot), text.split(',')))
 
 def parse(url):
+    """ Do everything"""
     return get_regions(get_text(url))

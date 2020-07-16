@@ -5,6 +5,7 @@ from multiprocessing import Process
 from api.config import app_config
 from parser.parser import parse
 from api.util import validate_url
+import json
 
 document_url = None
 callback_url = None
@@ -30,8 +31,10 @@ def run_parse():
     response = {
             'error': 'None',
             'data': data
-        }
-    requests.post(callback_url, headers=headers, data=response)
+    }
+
+    res = json.dumps(response)
+    requests.post(callback_url, headers=headers, data=res)
 
 
 def create_app(config_name):

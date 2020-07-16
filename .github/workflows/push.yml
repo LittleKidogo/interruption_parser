@@ -34,7 +34,6 @@ jobs:
       run: |
        pyinstaller --onefile manage.py
        
-  compile:
     strategy:
       matrix:
         os: ["ubuntu-latest", "macos-latest"]
